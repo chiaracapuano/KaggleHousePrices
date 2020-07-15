@@ -4,7 +4,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import OneHotEncoder, OrdinalEncoder
 import numpy as np
-from scipy.stats import skew
+from sklearn.preprocessing import PowerTransformer
 from sklearn.preprocessing import MinMaxScaler
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import LabelEncoder
@@ -17,15 +17,16 @@ import statistics
 pd.set_option("display.max_rows", 2000)
 train = pd.read_csv('/Users/chiara/PycharmProjects/KaggleHousePrices/house-prices-advanced-regression-techniques/train.csv')
 test = pd.read_csv('/Users/chiara/PycharmProjects/KaggleHousePrices/house-prices-advanced-regression-techniques/test.csv')
-
+#print(train.skew(axis=0))
 train['MSSubClass'] = train['MSSubClass'].astype(str)
-print(train['SalePrice'])
 
 X = train.drop(columns=['Id', 'SalePrice'])
 sc_Y = MinMaxScaler()
 y = sc_Y.fit_transform(train[['SalePrice']])
 X_train, X_test, y_train, y_test = train_test_split(
-    X, y, random_state=0)
+    X, y, random_state=0, test_size=0.01)
+
+
 
 print('1')
 
@@ -73,12 +74,13 @@ print('3')
 # Preprocessing for numerical data
 numerical_transformer_NaN = SimpleImputer()
 numerical_transformer_None = SimpleImputer(missing_values=None)
+pt = PowerTransformer(method = 'box-cox')
 
 
 numerical_transformer = Pipeline(steps=[
     ('imputer_Nan', SimpleImputer()),
     ('imputer_None', SimpleImputer(missing_values=None)),
-    ('scaler', MinMaxScaler())
+    ('scaler', pt)
 ])
 
 
@@ -125,8 +127,7 @@ print('5')
 my_pipeline.fit(X_train, y_train)
 # Preprocessing of validation data, get predictions
 preds = my_pipeline.predict(X_test)
-print(len(X_test))
-print(type(preds))
+
 
 # Evaluate the model
 score = mean_squared_error(y_test, preds)
@@ -135,4 +136,3 @@ yhat = sc_Y.inverse_transform(preds.reshape(-1, 1))
 y_test_transf = sc_Y.inverse_transform(y_test)
 
 a = list(zip(yhat, y_test_transf))
-print(a)
