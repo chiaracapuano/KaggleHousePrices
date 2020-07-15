@@ -5,30 +5,34 @@ from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import OneHotEncoder, OrdinalEncoder
 import numpy as np
 from scipy.stats import skew
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import MinMaxScaler
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import LabelEncoder
 from collections import Counter
 from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import mean_absolute_error
+from sklearn.metrics import mean_squared_error
+import statistics
 
-pd.set_option("display.max_rows", 101)
+pd.set_option("display.max_rows", 2000)
 train = pd.read_csv('/Users/chiara/PycharmProjects/KaggleHousePrices/house-prices-advanced-regression-techniques/train.csv')
 test = pd.read_csv('/Users/chiara/PycharmProjects/KaggleHousePrices/house-prices-advanced-regression-techniques/test.csv')
 
 train['MSSubClass'] = train['MSSubClass'].astype(str)
+print(train['SalePrice'])
 
 X = train.drop(columns=['Id', 'SalePrice'])
-y = train['SalePrice']
+sc_Y = MinMaxScaler()
+y = sc_Y.fit_transform(train[['SalePrice']])
 X_train, X_test, y_train, y_test = train_test_split(
     X, y, random_state=0)
 
+print('1')
 
 numerical_cols = []
 categorical_cols = []
 
-for col in train.columns:
+for col in X.columns:
     if train[col].dtype == 'object':
         categorical_cols.append(col)
     else:
@@ -45,6 +49,7 @@ for col in categorical_cols:
 
 trial_df_le['SalePrice'] = train['SalePrice']
 dfm_le = trial_df_le[[col for col in trial_df_le if trial_df_le[col].nunique() > 1]] # keep columns where there are more than 1 unique values
+print('2')
 
 corr_le = dfm_le.corr()
 corr_le_keep = corr_le[abs(corr_le['SalePrice'])>0.4]
@@ -59,17 +64,9 @@ plt.colorbar(corrMat)
 
 
 
+print('3')
 
-#categorical_cols_label_enc = []
-# Log transform of the skewed numerical features to lessen impact of outliers
-# Inspired by Alexandru Papiu's script : https://www.kaggle.com/apapiu/house-prices-advanced-regression-techniques/regularized-linear-models
-# As a general rule of thumb, a skewness with an absolute value > 0.5 is considered at least moderately skewed
-def transform_skewed(df, numerical_cols):
-    for i in numerical_cols:
-        skewness = df[i].apply(lambda x: skew(x))
-        skewness = skewness[abs(skewness) > 0.5]
-        skewed_features = skewness.index
-        df[skewed_features] = np.log1p(df[skewed_features])
+
 
 
 
@@ -81,9 +78,10 @@ numerical_transformer_None = SimpleImputer(missing_values=None)
 numerical_transformer = Pipeline(steps=[
     ('imputer_Nan', SimpleImputer()),
     ('imputer_None', SimpleImputer(missing_values=None)),
-    #('de-skew', transform_skewed(train, numerical_cols)),
-    ('scaler', StandardScaler())
+    ('scaler', MinMaxScaler())
 ])
+
+
 
 # Preprocessing for categorical data
 cat_le = corr_le_keep.index.tolist()
@@ -97,19 +95,20 @@ categorical_transformer_ohe = Pipeline(steps=[
 
 categorical_transformer_le = Pipeline(steps=[
     ('imputer', SimpleImputer(strategy='most_frequent')),
-    ('onehot', OrdinalEncoder())
+    ('ordinal', OrdinalEncoder())
 ])
 
 
-
+print('4')
 
 
 # Bundle preprocessing for numerical and categorical data
 preprocessor = ColumnTransformer(
     transformers=[
-        ('num', numerical_transformer_NaN,numerical_cols),
         ('cat_ohe', categorical_transformer_ohe, cat_ohe),
-        ('cat_le', categorical_transformer_le, cat_le)
+        ('cat_le', categorical_transformer_le, cat_le),
+        ('num', numerical_transformer_NaN, numerical_cols)
+
     ])
 
 
@@ -120,13 +119,20 @@ model = GradientBoostingRegressor(random_state=0)
 my_pipeline = Pipeline(steps=[('preprocessor', preprocessor),
                               ('model', model)
                              ])
+print('5')
 
 # Preprocessing of training data, fit model
 my_pipeline.fit(X_train, y_train)
-
 # Preprocessing of validation data, get predictions
 preds = my_pipeline.predict(X_test)
+print(len(X_test))
+print(type(preds))
 
 # Evaluate the model
-score = mean_absolute_error(y_test, preds)
-print('MAE:', score)
+score = mean_squared_error(y_test, preds)
+print('MSE:', score)
+yhat = sc_Y.inverse_transform(preds.reshape(-1, 1))
+y_test_transf = sc_Y.inverse_transform(y_test)
+
+a = list(zip(yhat, y_test_transf))
+print(a)
