@@ -46,14 +46,6 @@ numerical_cols.remove('SalePrice')
 numerical_cols.remove('Id')
 
 
-#for col in numerical_cols:
- #   plt.figure(1); plt.title(col)
-  #  c = sc_Y.fit_transform(X_train[[col]])
-   # sns.distplot(c, kde=False, fit=st.johnsonsu)
-    #plt.show()
-    #print(skew(c))
-
-
 #check which features need hot-encoding and which don't
 trial_df_le = pd.DataFrame()
 trial_df_enc = pd.DataFrame()
@@ -70,7 +62,6 @@ dfm_le = trial_df_le[[col for col in trial_df_le if trial_df_le[col].nunique() >
 print('2')
 
 corr_le = dfm_le.corr()
-#print(corr_le)
 corr_le_keep = corr_le[abs(corr_le['SalePrice'])>0.4]
 plt.figure(num=None, figsize=(10, 10), dpi=80, facecolor='w', edgecolor='k')
 corrMat = plt.matshow(corr_le, fignum = 1)
@@ -78,7 +69,7 @@ plt.xticks(range(len(corr_le.columns)), corr_le.columns, rotation=90)
 plt.yticks(range(len(corr_le.columns)), corr_le.columns)
 plt.gca().xaxis.tick_bottom()
 plt.colorbar(corrMat)
-#plt.show()
+plt.show()
 
 
 
