@@ -3,25 +3,18 @@ from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
 from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import OneHotEncoder, OrdinalEncoder
-import numpy as np
 from sklearn.feature_selection import SelectKBest, mutual_info_classif
-from sklearn.preprocessing import MinMaxScaler
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import LabelEncoder
 from collections import Counter
 from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import mean_squared_error
-import seaborn as sns
-import scipy.stats as st
-from scipy.stats import kurtosis, skew
 from sklearn.model_selection import GridSearchCV
 
 pd.set_option("display.max_rows", 2000)
 train_i = pd.read_csv('/Users/chiara/PycharmProjects/KaggleHousePrices/house-prices-advanced-regression-techniques/train.csv')
 test_submission = pd.read_csv('/Users/chiara/PycharmProjects/KaggleHousePrices/house-prices-advanced-regression-techniques/test.csv')
 
-#train_i = pd.concat([train_init, test_submission])
 train_i['MSSubClass'] = train_i['MSSubClass'].astype(str)
 
 
@@ -48,7 +41,6 @@ numerical_cols.remove('Id')
 
 #check which features need hot-encoding and which don't
 trial_df_le = pd.DataFrame()
-trial_df_enc = pd.DataFrame()
 
 le = LabelEncoder()
 for col in categorical_cols:
@@ -153,7 +145,6 @@ preprocessor = ColumnTransformer(
     ], remainder='passthrough')
 
 
-clf = GradientBoostingRegressor()
 # Bundle preprocessing and modeling code in a pipeline
 pipeline = Pipeline(steps=[('preprocessor', preprocessor),
                            ('reduce_dim', SelectKBest(mutual_info_classif)),
