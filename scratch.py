@@ -7,10 +7,9 @@ from sklearn.feature_selection import SelectKBest, mutual_info_classif
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import LabelEncoder
 from collections import Counter
-from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection import GridSearchCV
-
+from lightgbm import LGBMRegressor
 pd.set_option("display.max_rows", 2000)
 train_i = pd.read_csv('/Users/chiara/PycharmProjects/KaggleHousePrices/house-prices-advanced-regression-techniques/train.csv')
 test_submission = pd.read_csv('/Users/chiara/PycharmProjects/KaggleHousePrices/house-prices-advanced-regression-techniques/test.csv')
@@ -148,17 +147,16 @@ preprocessor = ColumnTransformer(
 # Bundle preprocessing and modeling code in a pipeline
 pipeline = Pipeline(steps=[('preprocessor', preprocessor),
                            ('reduce_dim', SelectKBest(mutual_info_classif)),
-                            ('clf', GradientBoostingRegressor(random_state=0))
+                            ('clf', LGBMRegressor(random_state=0))
                              ])
 print('5')
 
 
 parameters = [{
-        'reduce_dim__k': [100, 200, 278],
-        'clf__max_features': [1.0,0.3,0.1],
-        'clf__min_samples_leaf': [3,5,9,17],
-        'clf__max_depth': [6, 4, 2],
-        'clf__n_estimators': [100, 200, 300]}]
+        'reduce_dim__k': [200, 278],
+        'clf__num_leaves':[20, 40],
+        'clf__learning_rate': [0.1, 0.01],
+        'clf__max_depth': [ 4, 2]}]
 
 
 
@@ -168,7 +166,7 @@ print(CV.best_params_)
 best_params_dict = CV.best_params_
 pipeline = Pipeline(steps=[('preprocessor', preprocessor),
                            ('reduce_dim', SelectKBest(mutual_info_classif, k = best_params_dict["reduce_dim__k"])),
-                            ('clf', GradientBoostingRegressor(random_state=0, max_features = best_params_dict["clf__max_features"], min_samples_leaf = best_params_dict["clf__min_samples_leaf"], max_depth = best_params_dict["clf__max_depth"], n_estimators = best_params_dict["clf__n_estimators"]
+                            ('clf', LGBMRegressor(random_state=0, num_leaves = best_params_dict["clf__num_leaves"], learning_rate = best_params_dict["clf__learning_rate"], max_depth = best_params_dict["clf__max_depth"]
 
                                                               ))
                              ])
@@ -189,3 +187,4 @@ df_submit["Id"] = dummy_submission["Id"]
 
 df_submit["SalePrice"]= preds
 df_submit.to_csv('/Users/chiara/PycharmProjects/KaggleHousePrices/house-prices-advanced-regression-techniques/Chiara_best_model_submission.csv', index=False)
+#{'clf__learning_rate': 0.1, 'clf__max_depth': 4, 'clf__num_leaves': 30, 'reduce_dim__k': 278}
