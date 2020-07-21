@@ -187,4 +187,5 @@ df_submit["Id"] = dummy_submission["Id"]
 
 df_submit["SalePrice"]= preds
 df_submit.to_csv('/Users/chiara/PycharmProjects/KaggleHousePrices/house-prices-advanced-regression-techniques/Chiara_best_model_submission.csv', index=False)
-#{'clf__learning_rate': 0.1, 'clf__max_depth': 4, 'clf__num_leaves': 30, 'reduce_dim__k': 278}
+#TRIAL1: {'clf__learning_rate': 0.1, 'clf__max_depth': 4, 'clf__num_leaves': 30, 'reduce_dim__k': 278}
+#Trial 2: {'clf__learning_rate': 0.1, 'clf__max_depth': 4, 'clf__num_leaves': 20, 'reduce_dim__k': 278}
